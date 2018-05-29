@@ -1,8 +1,8 @@
-package com.wj8706.democamera2;
+package com.cloudminds.camera2;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).

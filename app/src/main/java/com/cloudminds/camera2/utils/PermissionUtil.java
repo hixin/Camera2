@@ -1,4 +1,4 @@
-package com.wj8706.democamera2.utils;
+package com.cloudminds.camera2.utils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -39,25 +39,8 @@ public class PermissionUtil {
 
     public void requestRequiredPermissions(final String[] permissins, int message, final int requestCode) {
         if (shouldShowRequestPermissionRationale(permissins)) {
-            new AlertDialog.Builder(activity)
-                    .setMessage(message)
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            ActivityCompat.requestPermissions(activity,permissins,requestCode);
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            activity.finish();
-                        }
-                    })
-                    .show();
-        } else {
             ActivityCompat.requestPermissions(activity,permissins,requestCode);
         }
     }
-
 
 }

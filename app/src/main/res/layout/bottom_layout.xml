@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bottom_background"
+    android:orientation="vertical">
+    <com.cloudminds.camera2.ui.widget.WheelView
+        android:id="@+id/wheelview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#222222"
+        app:lwvCenterMarkTextSize="18sp"
+        app:lwvCursorSize="10dp"
+        app:lwvHighlightColor="#FF9800"
+        app:lwvMarkColor="#EEEEEE"
+        app:lwvMarkTextColor="#E0E0E0"
+        app:lwvMarkTextSize="16sp"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp">
+        <com.cloudminds.camera2.ui.widget.RotateImageView
+            android:id="@+id/preview_thumb"
+            android:layout_width="@dimen/capture_size"
+            android:layout_height="@dimen/capture_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="33.43dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter" />
+
+        <com.cloudminds.camera2.ui.widget.RotateImageView
+            android:id="@+id/cap_btn"
+            android:layout_width="@dimen/shutter_size"
+            android:layout_height="@dimen/shutter_size"
+            android:layout_centerInParent="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/btn_red_shutter" />
+
+        <com.cloudminds.camera2.ui.widget.RotateImageView
+            android:id="@+id/switch_btn"
+            android:layout_width="@dimen/switcher_size"
+            android:layout_height="@dimen/switcher_size"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="33.43dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_switch_front"
+            android:scaleType="fitCenter" />
+
+    </RelativeLayout>
+
+</LinearLayout>
+

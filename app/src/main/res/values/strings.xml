@@ -1,4 +1,15 @@
 <resources>
-    <string name="app_name">DemoCamera2</string>
+    <string name="app_name">Camera2</string>
     <string name="need_permissions">该App需要打开摄像头拍照，并保存到设备上</string>
+    <string name="image_file_name_format" translatable="false">"'IMG'_yyyyMMdd_HHmmss"</string>
+    <!-- Video Camera format string for new video files. Passed to java.text.SimpleDateFormat. -->
+    <string name="video_file_name_format" translatable="false">"'VID'_yyyyMMdd_HHmmss"</string>
+    <!-- Filename prefix for panorama output. -->
+    <string name="pano_file_name_format" translatable="false">"'PANO'_yyyyMMdd_HHmmss"</string>
+
+    <string name="photo">拍照</string>
+    <string name="video">录像</string>
+    <string name="stereo_photo">3D拍照</string>
+    <string name="stereo_video">3D录像</string>
+    <string name="panorama">全景</string>
 </resources>

@@ -1,9 +1,9 @@
-package com.wj8706.democamera2.controler;
+package com.cloudminds.camera2.control;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.SensorManager;
@@ -19,9 +19,11 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Environment;
-import android.os.HandlerThread;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
@@ -30,9 +32,12 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
-import com.wj8706.democamera2.R;
-import com.wj8706.democamera2.utils.FileUtil;
-import com.wj8706.democamera2.utils.PermissionUtil;
+
+import com.cloudminds.camera2.CameraActivity;
+import com.cloudminds.camera2.CameraApp;
+import com.cloudminds.camera2.R;
+import com.cloudminds.camera2.utils.CameraUtil;
+import com.cloudminds.camera2.utils.PermissionUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,12 +47,8 @@ import java.util.Comparator;
 import java.util.List;
 
 
-/**
- * Created by wj8706 on 2018/5/7.
- */
-
-public class CameraControler {
-    private static String TAG = "wj-CameraControler";
+public class CameraController {
+    private static String TAG = "CameraControler";
     //屏幕方向
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static int SCREEN_ORIENTATION_0 = 0;
@@ -60,17 +61,8 @@ public class CameraControler {
         ORIENTATIONS.append(SCREEN_ORIENTATION_180,270);
         ORIENTATIONS.append(SCREEN_ORIENTATION_270,180);
     }
-    //拍照权限请求码
-    private static final int REQUEST_PICTURE_PERMISSION = 1;
-    //拍照权限
-    private static final String[] PICTURE_PERMISSIONS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO
-    };
 
-    private Activity mActivity;
-    private Context mContext;
+    private CameraActivity mActivity;
     private TextureView mTextureView;
     private SurfaceTexture mSurfaceTexture;
     private CameraCharacteristics mCameraCharacteristics;
@@ -123,7 +115,13 @@ public class CameraControler {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Log.d(TAG, "onImageAvailable: ");
-            Image image = reader.acquireNextImage();
+            final Image image = reader.acquireNextImage();
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                   // mActivity.getmThumbnail().setBitmap(Bitmap.createBitmap(image)));
+                }
+            });
             mBackgroundHandler.post(new ImageSaver(image));
             mIsCaptureFinished = true;
         }
@@ -142,12 +140,21 @@ public class CameraControler {
 
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
+    private Handler mUIHandler;
+    //拍照权限请求码
+    public static final int REQUEST_PICTURE_PERMISSION = 1;
+    //拍照权限
+    private static final String[] PICTURE_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
 
-
-    public CameraControler(Context context, TextureView textureView, Activity activity) {
-        this.mContext = context;
+    public CameraController(TextureView textureView, CameraActivity activity, Handler handler) {
         this.mTextureView = textureView;
         this.mActivity = activity;
+        this.mUIHandler = handler;
     }
 
     public boolean isCaptureFinished() {
@@ -189,6 +196,18 @@ public class CameraControler {
      * 获取拍照方向
      */
     private int getOrientation(int rotation) {
+
+        //TODO  FrontCamera
+        CameraManager manager = (CameraManager) mActivity.getSystemService(Context.CAMERA_SERVICE);
+        try {
+            CameraCharacteristics CameraCharacteristics = manager.getCameraCharacteristics(String.valueOf(mCameraID));
+            String[] cameraIdList = manager.getCameraIdList();
+            int orientation = CameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+            Log.i(TAG, "setUpCameraOutputs: " + cameraIdList.length);
+            Log.i(TAG, "setUpCameraOutputs: " + orientation + "," +mCameraID);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
         return ORIENTATIONS.get(rotation);
     }
 
@@ -265,6 +284,7 @@ public class CameraControler {
      */
     private boolean checkCameraID(int id) {
         for (String cameraStr : mCameraIDs) {
+            Log.i(TAG, "checkCameraID: " + cameraStr);
             if (Integer.parseInt(cameraStr) == id)
                 return true;
         }
@@ -279,15 +299,15 @@ public class CameraControler {
     @SuppressLint("MissingPermission")
     public void openCamera(int cameraId) {
         //查看是否有相机权限，如果没有则请求int width, int heightcamera权限
-        PermissionUtil permissionUtil = new PermissionUtil((Activity) mContext);
+        PermissionUtil permissionUtil = new PermissionUtil(mActivity);
         if (!permissionUtil.hasPermissionGtranted(PICTURE_PERMISSIONS)) {
             permissionUtil.requestRequiredPermissions(PICTURE_PERMISSIONS, R.string.need_permissions, REQUEST_PICTURE_PERMISSION);
             return;
         }
-
-        mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
+        mCameraManager = (CameraManager) CameraApp.getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             mCameraIDs = mCameraManager.getCameraIdList();
+            Log.d(TAG, "openCamera getCameraIdList: "+mCameraIDs.length);
             //检查camera id是否合法
             if (!checkCameraID(cameraId)) {
                 Log.e(TAG, "openCamera: illegal camera id!");
@@ -435,7 +455,7 @@ public class CameraControler {
         }
     }
 
-    /**
+        /**
      *设置Video分辨率大小
      */
     private Size getVideoSize(Size[] sizes) {
@@ -549,7 +569,7 @@ public class CameraControler {
      */
     private void showToast(String text) {
         if (!text.equals("")) {
-            Toast.makeText(mContext, text, Toast.LENGTH_SHORT).show();
+            Toast.makeText(CameraApp.getContext(), text, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -590,9 +610,18 @@ public class CameraControler {
         @Override
         public void run() {
             Log.d(TAG, "run: ");
-            int saveResult = FileUtil.saveImage(image);
-            if (saveResult == FileUtil.SAVE_SUCCESS) {
-                showToast("Photo saved succeed!");
+            int saveResult = CameraUtil.saveImage(image, new CameraUtil.onSaveCallBackListener() {
+                @Override
+                public void onSave(Uri uri) {
+                    Message message = Message.obtain();
+                    message.what = 1;
+                    message.obj = uri;
+                    mUIHandler.sendMessage(message);
+                }
+
+            });
+            if (saveResult == CameraUtil.SAVE_SUCCESS) {
+                Log.i(TAG, "Photo saved succeed!");
             }
         }
     }
