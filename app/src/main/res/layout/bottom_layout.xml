@@ -9,13 +9,12 @@
         android:id="@+id/wheelview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#222222"
-        app:lwvCenterMarkTextSize="18sp"
-        app:lwvCursorSize="10dp"
-        app:lwvHighlightColor="#FF9800"
-        app:lwvMarkColor="#EEEEEE"
-        app:lwvMarkTextColor="#E0E0E0"
-        app:lwvMarkTextSize="16sp"/>
+        app:CenterMarkTextSize="18sp"
+        app:CursorSize="10dp"
+        app:HighlightColor="#FF9800"
+        app:MarkColor="#EEEEEE"
+        app:MarkTextColor="#E0E0E0"
+        app:MarkTextSize="16sp"/>
 
     <RelativeLayout
         android:layout_width="match_parent"

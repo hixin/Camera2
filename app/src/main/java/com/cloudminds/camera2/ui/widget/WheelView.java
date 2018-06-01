@@ -14,6 +14,7 @@ import android.support.v4.view.ViewCompat;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
@@ -27,6 +28,7 @@ import java.util.List;
  * Created by kyle on 15/11/9.
  */
 public class WheelView extends View implements GestureDetector.OnGestureListener {
+	private static final String TAG = "WheelView";
 	public static final float DEFAULT_INTERVAL_FACTOR = 1.2f;
 	public static final float DEFAULT_MARK_RATIO = 0.7f;
 
@@ -94,22 +96,22 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 		mNormalTextSize = density * 18;
 		mBottomSpace = density * 6;
 
-		TypedArray ta = attrs == null ? null : getContext().obtainStyledAttributes(attrs, R.styleable.lwvWheelView);
+		TypedArray ta = attrs == null ? null : getContext().obtainStyledAttributes(attrs, R.styleable.WheelView);
 		if (ta != null) {
-			mHighlightColor = ta.getColor(R.styleable.lwvWheelView_lwvHighlightColor, mHighlightColor);
-			mMarkTextColor = ta.getColor(R.styleable.lwvWheelView_lwvMarkTextColor, mMarkTextColor);
-			mMarkColor = ta.getColor(R.styleable.lwvWheelView_lwvMarkColor, mMarkColor);
-			mIntervalFactor = ta.getFloat(R.styleable.lwvWheelView_lwvIntervalFactor, mIntervalFactor);
-			mMarkRatio = ta.getFloat(R.styleable.lwvWheelView_lwvMarkRatio, mMarkRatio);
-			mAdditionCenterMark = ta.getString(R.styleable.lwvWheelView_lwvAdditionalCenterMark);
-			mCenterTextSize = ta.getDimension(R.styleable.lwvWheelView_lwvCenterMarkTextSize, mCenterTextSize);
-			mNormalTextSize = ta.getDimension(R.styleable.lwvWheelView_lwvMarkTextSize, mNormalTextSize);
-			mCursorSize = ta.getDimension(R.styleable.lwvWheelView_lwvCursorSize, mCursorSize);
+			mHighlightColor = ta.getColor(R.styleable.WheelView_HighlightColor, mHighlightColor);
+			mMarkTextColor = ta.getColor(R.styleable.WheelView_MarkTextColor, mMarkTextColor);
+			mMarkColor = ta.getColor(R.styleable.WheelView_MarkColor, mMarkColor);
+			mIntervalFactor = ta.getFloat(R.styleable.WheelView_IntervalFactor, mIntervalFactor);
+			mMarkRatio = ta.getFloat(R.styleable.WheelView_MarkRatio, mMarkRatio);
+			mAdditionCenterMark = ta.getString(R.styleable.WheelView_AdditionalCenterMark);
+			mCenterTextSize = ta.getDimension(R.styleable.WheelView_CenterMarkTextSize, mCenterTextSize);
+			mNormalTextSize = ta.getDimension(R.styleable.WheelView_MarkTextSize, mNormalTextSize);
+			mCursorSize = ta.getDimension(R.styleable.WheelView_CursorSize, mCursorSize);
 		}
 		mFadeMarkColor = mHighlightColor & 0xAAFFFFFF;
 		mIntervalFactor = Math.max(1, mIntervalFactor);
 		mMarkRatio = Math.min(1, mMarkRatio);
-		mTopSpace = mCursorSize + density * 2;
+		mTopSpace = mCursorSize + density * 16;
 
 		mMarkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mMarkTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -185,7 +187,7 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 	private int measureHeight(int heightMeasure) {
 		int measureMode = MeasureSpec.getMode(heightMeasure);
 		int measureSize = MeasureSpec.getSize(heightMeasure);
-		int result = (int) (mBottomSpace + mTopSpace * 2 + mCenterTextSize);
+		int result = (int) (mTopSpace * 2 + mCursorSize);
 		switch (measureMode) {
 			case MeasureSpec.EXACTLY:
 				result = Math.max(result, measureSize);
@@ -216,18 +218,17 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 			mMaxOverScrollDistance = w / 2.f;
 			mContentRectF.set(0, 0, (mMarkCount - 1) * mIntervalDis, h);
 			mViewScopeSize = (int) Math.ceil(mMaxOverScrollDistance / mIntervalDis);
+			Log.i(TAG, "onSizeChanged mMaxOverScrollDistance: " + mMaxOverScrollDistance+" , mIntervalDis: "+mIntervalDis);
 		}
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-
-
 		mCenterIndicatorPath.reset();
 		float sizeDiv2 = mCursorSize / 2f;
 		float sizeDiv3 = mCursorSize / 3f;
-		mCenterIndicatorPath.moveTo(mMaxOverScrollDistance  + getScrollX(), mHeight/2);
+		mCenterIndicatorPath.moveTo(mMaxOverScrollDistance  + getScrollX(), mHeight/2 + sizeDiv3);
 		mCenterIndicatorPath.rLineTo(-sizeDiv2, sizeDiv2);
 		mCenterIndicatorPath.rLineTo(0, sizeDiv3);
 		mCenterIndicatorPath.rLineTo(mCursorSize, 0);
@@ -252,7 +253,7 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 
 		float x = start * mIntervalDis;
 
-		float markHeight = mHeight - mBottomSpace - mCenterTextSize - mTopSpace;
+		float markHeight = mHeight - mTopSpace - mCursorSize *2;
 		// small scale Y offset
 		float smallMarkShrinkY = markHeight * (1 - mMarkRatio) / 2f;
 		smallMarkShrinkY = Math.min((markHeight - mMarkWidth) / 2f, smallMarkShrinkY);
@@ -271,7 +272,7 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 						mMarkTextPaint.setTextSize(mNormalTextSize);
 						canvas.drawText(mAdditionCenterMark, x + tsize / 2f, mTopSpace, mMarkTextPaint);
 					} else {
-						canvas.drawText(temp, 0, temp.length(), x, mTopSpace, mMarkTextPaint);
+						canvas.drawText(temp, 0, temp.length(), x , mTopSpace, mMarkTextPaint);
 					}
 				} else {
 					mMarkTextPaint.setColor(mMarkTextColor);

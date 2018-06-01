@@ -12,7 +12,7 @@
     <include
         layout="@layout/bottom_layout"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="182dp"
         android:layout_gravity="bottom"/>
 
     <LinearLayout
