@@ -6,10 +6,15 @@
     <string name="video_file_name_format" translatable="false">"'VID'_yyyyMMdd_HHmmss"</string>
     <!-- Filename prefix for panorama output. -->
     <string name="pano_file_name_format" translatable="false">"'PANO'_yyyyMMdd_HHmmss"</string>
-
+    <string name="camera_error_title">Camera error</string>
+    <string name="error_permissions">The app does not have the necessary permissions needed to run. Please check your permissions settings.</string>
+    <string name="dialog_dismiss">Dismiss</string>
     <string name="photo">拍照</string>
     <string name="video">录像</string>
     <string name="stereo_photo">3D拍照</string>
     <string name="stereo_video">3D录像</string>
     <string name="panorama">全景</string>
+    <string name="accessibility_take_photo_in_video">Take photo in video</string>
+    <string name="accessibility_pause_recording_video">Pause recording video</string>
+    <string name="accessibility_resume_recording_video">Resume recording video</string>
 </resources>

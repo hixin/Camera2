@@ -10,7 +10,6 @@ import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
-import com.cloudminds.camera2.CameraApp;
 import com.cloudminds.camera2.R;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -72,7 +71,7 @@ public class CameraUtil {
             fileOutputStream.close();
 
             ContentValues values = new ContentValues();
-            ContentResolver resolver = CameraApp.getContext().getContentResolver();
+            ContentResolver resolver = AppUtil.getContentResolver();
             values.put(MediaStore.Images.ImageColumns.DATA, picturePath);
             values.put(MediaStore.Images.ImageColumns.TITLE, title);
             values.put(MediaStore.Images.ImageColumns.DISPLAY_NAME, title + ".jpg");

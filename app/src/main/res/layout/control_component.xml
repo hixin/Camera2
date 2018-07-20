@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:camera="http://schemas.android.com/apk/res/com.huawei.camera"
+    android:id="@id/control_component_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:splitMotionEvents="false">
+
+    <com.cloudminds.camera2.ui.widget.RotateImageView
+        android:id="@id/capture_in_video"
+        android:layout_width="40.0dip"
+        android:layout_height="40.0dip"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="@dimen/control_component_thumb_layout_marginstart"
+        android:layout_marginTop="@dimen/control_component_thumb_layout_margintop"
+        android:contentDescription="@string/accessibility_take_photo_in_video"
+        android:splitMotionEvents="false"
+        android:src="@drawable/btn_capture_video_dr"
+        android:visibility="gone" />
+
+    <com.cloudminds.camera2.ui.widget.VideoPauseResumeView
+        android:id="@id/pause_in_video"
+        android:layout_width="40.0dip"
+        android:layout_height="40.0dip"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="false"
+        android:layout_marginEnd="@dimen/control_component_pause_layout_marginend"
+        android:layout_marginTop="@dimen/control_component_pause_layout_margintop"
+        android:contentDescription="@string/accessibility_pause_recording_video"
+        android:splitMotionEvents="false"
+        android:src="@drawable/btn_pause_in_video_dr"
+        android:visibility="gone" />
+    <Chronometer
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:format="00:00:00"
+        android:layout_below="@id/shutter_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12.0dip"
+        android:textSize="12.0dip"
+        android:visibility="gone"/>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="17.0dip"
+        android:layout_below="@id/shutter_button"
+        android:layout_marginTop="13.0dip"
+        android:layout_toStartOf="@id/video_recording_time"
+        android:paddingEnd="6.0dip">
+
+        <ImageView
+            android:id="@id/video_recording_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_stat_recording"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+</RelativeLayout>

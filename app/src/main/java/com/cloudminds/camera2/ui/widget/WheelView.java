@@ -447,7 +447,7 @@ public class WheelView extends View implements GestureDetector.OnGestureListener
 		return mItems;
 	}
 
-	public void setItems(List<String> items) {
+	public void setData(List<String> items) {
 		if (mItems == null) {
 			mItems = new ArrayList<>();
 		} else {

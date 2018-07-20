@@ -11,4 +11,20 @@
 		<attr name="CenterMarkTextSize" format="dimension"/>
 		<attr name="AdditionalCenterMark" format="string|reference"/>
 	</declare-styleable>
+
+	<declare-styleable name="MenuCommon">
+		<attr name="titleResourceId" format="reference" />
+		<attr name="title" format="string" />
+		<attr name="value" format="string" />
+		<attr name="icon" format="reference" />
+		<attr name="defaultType" format="integer" />
+		<attr name="entry" format="integer" />
+		<attr name="supportedCamera" format="integer" />
+		<attr name="defaultSupport" format="integer" />
+		<attr name="contentDescription" format="string" />
+		<attr name="message" format="string" />
+		<attr name="visible" format="boolean" />
+		<attr name="menuPreferenceKey" format="string" />
+		<attr name="showImageInParent" format="boolean" />
+	</declare-styleable>
 </resources>

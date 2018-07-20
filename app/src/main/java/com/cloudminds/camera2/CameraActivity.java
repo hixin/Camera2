@@ -1,16 +1,17 @@
 package com.cloudminds.camera2;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
-import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -19,99 +20,80 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Chronometer;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+import com.cloudminds.camera2.App.AppController;
+import com.cloudminds.camera2.App.CameraAppUI;
 import com.cloudminds.camera2.control.CameraController;
-import com.cloudminds.camera2.model.CameraModuleType;
-import com.cloudminds.camera2.model.ModuleTypeHelper;
-import com.cloudminds.camera2.ui.widget.RotateImageView;
-import com.cloudminds.camera2.ui.widget.WheelView;
+import com.cloudminds.camera2.model.CameraHolder;
+import com.cloudminds.camera2.model.capture.CameraModule;
+import com.cloudminds.camera2.model.capture.ModuleManager;
+import com.cloudminds.camera2.settings.Keys;
+import com.cloudminds.camera2.settings.SettingsManager;
+import com.cloudminds.camera2.utils.AppUtil;
+import java.lang.ref.WeakReference;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.cloudminds.camera2.App.CameraActions.SHOW_RECENT_THUMBNAIL;
+import static com.cloudminds.camera2.App.CameraActions.UPDATE_THUMBNAIL;
 
-import static com.cloudminds.camera2.control.CameraController.REQUEST_PICTURE_PERMISSION;
-
-public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
+public class CameraActivity extends AppCompatActivity implements AppController{
     private static String TAG = "CameraActivity";
+    public CameraController getCameraController() {
+        return mCameraController;
+    }
 
-    private CameraController mCameraController = null;
+    private static final String INTENT_ACTION_STILL_IMAGE_CAMERA_SECURE =
+            "android.media.action.STILL_IMAGE_CAMERA_SECURE";
+    public static final String ACTION_IMAGE_CAPTURE_SECURE =
+            "android.media.action.IMAGE_CAPTURE_SECURE";
+    public static final String SECURE_CAMERA_EXTRA = "secure_camera";
+    private CameraAppUI mCameraAppUI;
+    private CameraController mCameraController;
+    private ModuleManager moduleManager;
+    private SettingsManager mSettingsManager;
+    private ErrorCallBack errorCallBack = new ErrorCallBack();
 
-    private RotateImageView mCaptureButton;
-    private RotateImageView mSwitchButton;
-    private WheelView wheelView;
-    private RotateImageView mThumbnail;
-    private ImageButton mRecordButton;
+    private int mCurrentModeIndex;
+    private CameraModule mCurrentModule;
+    private Handler mMainHandler;
+    private boolean mPaused;
+    private Uri recentPhoto;
+    private boolean initFirstTime = false;
+
+    //拍照权限请求码
+    public static final int REQUEST_PICTURE_PERMISSION = 1;
+    //拍照权限
+    private static final String[] PICTURE_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
+
     private TextureView mTextureView;
-    private Chronometer mTimer;
-    private LinearLayout mTimeLayout;
-    private Uri lastImageUri;
-
-
-    private final CameraModuleType[] mModuleTypes = new CameraModuleType[]{
-            CameraModuleType.PHOTO_MODULE,
-            CameraModuleType.VIDEO_MODULE,
-            CameraModuleType.STEREO_PHOTO,
-            CameraModuleType.STEREO_VIDEO,
-            CameraModuleType.PANAROMA,
-    };
-
-    //uiHandler在主线程中创建，所以自动绑定主线程
-    private Handler mUIHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what){
-                case 1:
-                    lastImageUri = (Uri) msg.obj;
-                    Glide.with(CameraActivity.this).load(lastImageUri).into(mThumbnail);
-                    break;
-                case 2:
-                    Glide.with(CameraActivity.this).load(lastImageUri).into(mThumbnail);
-                    break;
-            }
-        }
-    };
-    private TextureView.SurfaceTextureListener mSurfaceListener = new TextureView.SurfaceTextureListener() {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            if (mTextureView.isAvailable()) {
-                mCameraController.openCamera(0);
-            }
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return false;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: ");
         super.onCreate(savedInstanceState);
         setFullScreen();
-        setContentView(R.layout.activity_main);
-        initView();
-        final List<String> items = new ArrayList<>();
-        for (int i = 0; i < mModuleTypes.length; i++) {
-            items.add(getResources().getString(ModuleTypeHelper.ModuleType2Name(mModuleTypes[i])));
+        AppUtil.initialize(this);
+        moduleManager = new ModuleManager();
+        mSettingsManager = new SettingsManager(this);
+        mMainHandler = new MainHandler(this, getMainLooper());
+        mCameraController = new CameraController(this, mMainHandler);
+
+        if (isStartRequestPermission()) {
+            finish();
+            return;
         }
-        wheelView.setItems(items);
-        wheelView.setMinSelectableIndex(0);
-        wheelView.setMaxSelectableIndex(items.size() - 1);
+
+        setContentView(R.layout.camera_main);
+        mCameraAppUI = new CameraAppUI(this, findViewById(R.id.camera_root), isCaptureIntent());
+        mTextureView = findViewById(R.id.textureview);
+        mCameraController.bindTextureView(mTextureView);
+        setModuleFromModeIndex(0);
+        mCurrentModule.init(this, isSecureCamera(), isCaptureIntent());
     }
 
     private void setFullScreen() {
@@ -123,116 +105,65 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         window.setAttributes(params);
     }
 
-    private void initView() {
-        mCaptureButton = findViewById(R.id.cap_btn);
-        mTextureView = findViewById(R.id.textureview);
-        mSwitchButton = findViewById(R.id.switch_btn);
-        mRecordButton = findViewById(R.id.record_btn);
-        mTimeLayout = findViewById(R.id.time_layout);
-        mTimer = findViewById(R.id.timer);
-        mThumbnail = findViewById(R.id.preview_thumb);
-        wheelView = findViewById(R.id.wheelview);
-        mCaptureButton.setOnClickListener(this);
-        mSwitchButton.setOnClickListener(this);
-        mRecordButton.setOnClickListener(this);
-        mThumbnail.setOnClickListener(this);
-        mRecordButton.setBackgroundResource(R.drawable.btn_shutter_video_default);
-        mTimeLayout.setVisibility(View.GONE);
-
+    private void setModuleFromModeIndex(int modeIndex) {
+        mCurrentModeIndex = modeIndex;
+        mCameraController.closeCamera();
+        mCurrentModule = moduleManager.createModule(modeIndex, getIntent());
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.switch_btn:
-                mCameraController.switchCamera();
-                if (mCameraController.getOpenedCamera() == 0) {
-                    mSwitchButton.setBackgroundResource(R.drawable.ic_switch_front);
-                } else {
-                    mSwitchButton.setBackgroundResource(R.drawable.ic_switch_back);
-                }
-                break;
-            case R.id.cap_btn:
-                if (mCameraController.isCaptureFinished()) {
-                    mCameraController.takePicture();
-                }
-                break;
-
-            case R.id.record_btn:
-                if (!mCameraController.isRecordingVideo()){
-                    mCameraController.startRecording();
-                    mRecordButton.setBackgroundResource(R.drawable.btn_shutter_video_recording);
-                    mCaptureButton.setBackgroundResource(R.drawable.btn_shutter_pressed_disabled);
-                    mCaptureButton.setEnabled(false);
-                    mSwitchButton.setEnabled(false);
-                    mTimeLayout.setVisibility(View.VISIBLE);
-                    mTimer.setBase(SystemClock.elapsedRealtime());
-                    int hour = (int) ((SystemClock.elapsedRealtime()-mTimer.getBase()) / 1000 / 60);
-                    mTimer.setFormat("0"+String.valueOf(hour)+":%s");
-                    mTimer.start();
-                } else {
-                    mCameraController.stopRecording();
-                    mRecordButton.setBackgroundResource(R.drawable.btn_shutter_video_default);
-                    mCaptureButton.setBackgroundResource(R.drawable.btn_shutter_default);
-                    mCaptureButton.setEnabled(true);
-                    mSwitchButton.setEnabled(true);
-                    mTimer.stop();
-                    mTimeLayout.setVisibility(View.GONE);
-                }
-                break;
-            case R.id.preview_thumb:
-                gotoGallery(lastImageUri);
-                break;
+    public void initFirstTime() {
+        if(initFirstTime) {
+            return;
         }
+        recentPhoto  = getLastImageUri();
+        if (recentPhoto != null) {
+            mMainHandler.sendEmptyMessage(SHOW_RECENT_THUMBNAIL);
+        }
+        initFirstTime = true;
+
 
     }
+
 
     @Override
     protected void onResume() {
-        Log.d(TAG, "onResume: ");
         super.onResume();
-        if (mTextureView.isAvailable()) {
-            Log.d(TAG, "onResume: isAvailable!");
-            mCameraController.openCamera(0);
-        } else {
-            Log.d(TAG, "onResume: not available!");
-            mCameraController = new CameraController(mTextureView, this, mUIHandler);
-            mTextureView.setSurfaceTextureListener(mSurfaceListener);
-            mCameraController.setOrientationListener();
+        Log.d(TAG, "onResume: ");
+        if (isStartRequestPermission()) {
+            finish();
+            return;
         }
-
+        initFirstTime();
+        mPaused = false;
+        mCurrentModule.resume();
     }
 
     @Override
     protected void onPause() {
-        Log.d(TAG, "onPause: ");
         super.onPause();
-        if (mCameraController.isRecordingVideo()) {
+        Log.d(TAG, "onPause: ");
+        mPaused = true;
+     /*   if (mCameraController.isRecordingVideo()) {
             mCameraController.stopRecording();
             mRecordButton.setBackgroundResource(R.drawable.btn_shutter_video_default);
             mTimer.stop();
             mTimeLayout.setVisibility(View.GONE);
-        }
+        }*/
         if (mCameraController != null && mCameraController.getOpenedCamera()!=-1) {
             mCameraController.closeCamera();
         }
-
     }
+
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         mCameraController.closeCamera();
+        super.onDestroy();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-
-        } else {
-
-        }
     }
 
     @Override
@@ -240,18 +171,107 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         if(requestCode == REQUEST_PICTURE_PERMISSION) {
             if((grantResults.length > 0)  && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 Log.i(TAG, "onRequestPermissionsResult: ok");
-                lastImageUri = getLastImageUri();
             } else {
                 Log.i(TAG, "onRequestPermissionsResult: error");
+                finish();
             }
         }
     }
 
+    @Override
+    public void onModeSelected(int moduleIndex) {
+        if (mCurrentModeIndex == moduleIndex) {
+            return;
+        }
+        closeModule(mCurrentModule);
+        setModuleFromModeIndex(moduleIndex);
+        openModule(mCurrentModule);
+    }
+
+    @Override
     public void gotoGallery(Uri uri) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(uri, "image/*");
         startActivity(intent);
+    }
+
+    @Override
+    public void takePicture() {
+        if (mCameraController.isCaptureFinished()) {
+            mCameraController.takePicture();
+        }
+    }
+
+    private void openModule(CameraModule module) {
+        module.init(this, isSecureCamera(), isCaptureIntent());
+        if (!mPaused) {
+            module.resume();
+        }
+    }
+
+    private void closeModule(CameraModule module) {
+        module.pause();
+    }
+
+
+    private boolean isCaptureIntent() {
+        if (MediaStore.ACTION_VIDEO_CAPTURE.equals(getIntent().getAction())
+                || MediaStore.ACTION_IMAGE_CAPTURE.equals(getIntent().getAction())
+                || MediaStore.ACTION_IMAGE_CAPTURE_SECURE.equals(getIntent().getAction())) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isSecureCamera() {
+        // Check if this is in the secure camera mode.
+        boolean mSecureCamera = false;
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        if (INTENT_ACTION_STILL_IMAGE_CAMERA_SECURE.equals(action)
+                || ACTION_IMAGE_CAPTURE_SECURE.equals(action)) {
+            mSecureCamera = true;
+        } else {
+            mSecureCamera = intent.getBooleanExtra(SECURE_CAMERA_EXTRA, false);
+        }
+
+        return  mSecureCamera;
+    }
+
+    class  ErrorCallBack implements CameraHolder.CameraOpenErrorCallback{
+        @Override
+        public void onError() {
+            Toast.makeText(CameraActivity.this, "open error", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+    
+    private class MainHandler extends Handler {
+        final WeakReference<CameraActivity> mActivity;
+
+        public MainHandler(CameraActivity activity, Looper looper) {
+            super(looper);
+            mActivity = new WeakReference<CameraActivity>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            CameraActivity activity = mActivity.get();
+            if (activity == null) {
+                return;
+            }
+            switch (msg.what) {
+                case UPDATE_THUMBNAIL:
+                    mCameraAppUI.updateThumbnail((Uri) msg.obj);
+                    break;
+                case SHOW_RECENT_THUMBNAIL:
+                    mCameraAppUI.updateThumbnail(recentPhoto);
+                default :
+                    break;
+            }
+        }
     }
 
     public Uri getLastImageUri() {
@@ -270,7 +290,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                     int id = cursor.getInt(cursor
                             .getColumnIndex(MediaStore.MediaColumns._ID));
                     Uri baseUri = Uri.parse("content://media/external/images/media");
-                    mUIHandler.sendEmptyMessage(2);
                     return Uri.withAppendedPath(baseUri, "" + id);
                 }
 
@@ -282,6 +301,33 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
         }
         return null;
+    }
+
+
+    private boolean isStartRequestPermission() {
+
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isRequestShown = prefs.getBoolean(Keys.KEY_REQUEST_PERMISSION, false);
+        if (isRequestShown && hasCriticalPermissions()) {
+            return false;
+        }
+
+        Intent intent = new Intent(this, PermissionsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+
+        // Scene: Start from launcher, user do not allow the location permission. Set first request flag
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(Keys.KEY_REQUEST_PERMISSION, true);
+        editor.apply();
+        return true;
+    }
+
+    private boolean hasCriticalPermissions() {
+        return checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
 }

@@ -1,56 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/bottom_background"
-    android:orientation="vertical">
-    <com.cloudminds.camera2.ui.widget.WheelView
+    android:layout_height="match_parent"
+    android:background="@drawable/bottom_background">
+    <!-- <com.cloudminds.camera2.ui.widget.WheelView
+         android:id="@+id/wheelview"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         app:CenterMarkTextSize="18sp"
+         app:CursorSize="10dp"
+         app:HighlightColor="#FF9800"
+         app:MarkColor="#EEEEEE"
+         app:MarkTextColor="#E0E0E0"
+         app:MarkTextSize="16sp"/>-->
+
+    <com.cloudminds.camera2.ui.widget.Switcher
         android:id="@+id/wheelview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:CenterMarkTextSize="18sp"
-        app:CursorSize="10dp"
-        app:HighlightColor="#FF9800"
-        app:MarkColor="#EEEEEE"
-        app:MarkTextColor="#E0E0E0"
-        app:MarkTextSize="16sp"/>
+        android:layout_height="50dp"
+        android:layout_above="@id/shutter_button_root" />
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="120dp">
+        android:id="@id/shutter_button_root"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/control_component_height"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="37.0dp">
+
         <com.cloudminds.camera2.ui.widget.RotateImageView
-            android:id="@+id/preview_thumb"
-            android:layout_width="@dimen/capture_size"
-            android:layout_height="@dimen/capture_size"
+            android:id="@id/navigation_spot"
+            android:layout_width="6.0dp"
+            android:layout_height="6.0dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/navigation_spot_current" />
+
+        <com.cloudminds.camera2.ui.widget.RotateImageView
+            android:id="@id/preview_thumb"
+            android:layout_width="40.0dp"
+            android:layout_height="40.0dp"
             android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="33.43dp"
-            android:background="@android:color/transparent"
-            android:scaleType="fitCenter" />
+            android:layout_alignParentTop="false"
+            android:layout_marginStart="40.0dp"
+            android:layout_marginTop="48.0dp"
+            android:background="@drawable/border_last_picture_normal"
+            android:scaleType="center" />
 
         <com.cloudminds.camera2.ui.widget.RotateImageView
-            android:id="@+id/cap_btn"
-            android:layout_width="@dimen/shutter_size"
-            android:layout_height="@dimen/shutter_size"
-            android:layout_centerInParent="true"
-            android:clickable="true"
-            android:focusable="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/btn_red_shutter" />
-
-        <com.cloudminds.camera2.ui.widget.RotateImageView
-            android:id="@+id/switch_btn"
-            android:layout_width="@dimen/switcher_size"
-            android:layout_height="@dimen/switcher_size"
+            android:id="@id/effect"
+            android:layout_width="50.0dp"
+            android:layout_height="50.0dp"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="33.43dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_switch_front"
-            android:scaleType="fitCenter" />
+            android:layout_alignParentTop="false"
+            android:layout_marginEnd="40.0dp"
+            android:layout_marginTop="43.0dp"
+            android:scaleType="center"
+            android:src="@drawable/btn_effect_dr" />
 
+        <com.cloudminds.camera2.ui.component.shutterbutton.ShutterButton
+            android:id="@id/shutter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30.0dp"
+            android:background="@drawable/btn_shutter_circle"
+            android:scaleType="fitXY"
+            android:src="@drawable/shutter_button_normal_dr" />
     </RelativeLayout>
 
-</LinearLayout>
+</RelativeLayout>
 
