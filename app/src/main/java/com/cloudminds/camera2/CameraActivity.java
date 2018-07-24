@@ -28,6 +28,7 @@ import com.cloudminds.camera2.control.CameraController;
 import com.cloudminds.camera2.model.CameraHolder;
 import com.cloudminds.camera2.model.capture.CameraModule;
 import com.cloudminds.camera2.model.capture.ModuleManager;
+import com.cloudminds.camera2.model.capture.VideoModule;
 import com.cloudminds.camera2.settings.Keys;
 import com.cloudminds.camera2.settings.SettingsManager;
 import com.cloudminds.camera2.utils.AppUtil;
@@ -59,17 +60,6 @@ public class CameraActivity extends AppCompatActivity implements AppController{
     private boolean mPaused;
     private Uri recentPhoto;
     private boolean initFirstTime = false;
-
-    //拍照权限请求码
-    public static final int REQUEST_PICTURE_PERMISSION = 1;
-    //拍照权限
-    private static final String[] PICTURE_PERMISSIONS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-    };
-
     private TextureView mTextureView;
 
     @Override
@@ -166,17 +156,6 @@ public class CameraActivity extends AppCompatActivity implements AppController{
         super.onConfigurationChanged(newConfig);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_PICTURE_PERMISSION) {
-            if((grantResults.length > 0)  && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                Log.i(TAG, "onRequestPermissionsResult: ok");
-            } else {
-                Log.i(TAG, "onRequestPermissionsResult: error");
-                finish();
-            }
-        }
-    }
 
     @Override
     public void onModeSelected(int moduleIndex) {
@@ -201,6 +180,35 @@ public class CameraActivity extends AppCompatActivity implements AppController{
         if (mCameraController.isCaptureFinished()) {
             mCameraController.takePicture();
         }
+    }
+
+    @Override
+    public VideoModule.State getRecordState() {
+        return mCameraController.getVideoState();
+    }
+
+    @Override
+    public void startRecording() {
+        mCameraController.startRecording();
+        mCameraAppUI.onStartRecording();
+    }
+
+    @Override
+    public void stopRecording() {
+        mCameraController.stopRecording();
+        mCameraAppUI.onStopRecording();
+    }
+
+    @Override
+    public void pauseRecording() {
+        mCameraController.pauseRecording();
+        mCameraAppUI.onPauseRecording();
+    }
+
+    @Override
+    public void resumeRecording() {
+        mCameraController.resumeRecording();
+        mCameraAppUI.onResumeRecording();
     }
 
     private void openModule(CameraModule module) {

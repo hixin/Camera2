@@ -83,7 +83,7 @@
     <item type="id" name="shower">false</item>
     <item type="id" name="ga">false</item>
     <item type="id" name="thumbnail_background_view">false</item>
-    <item type="id" name="control_component_layout">false</item>
+    <item type="id" name="video_component_layout">false</item>
     <item type="id" name="capture_in_video">false</item>
     <item type="id" name="effect">false</item>
     <item type="id" name="effect_level_view">false</item>

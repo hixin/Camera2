@@ -59,42 +59,6 @@ public class Switcher extends View implements GestureDetector.OnGestureListener 
     private int startPos;
     private int centerPos;
 
-    public int getMaxLeftScrollDistance(int mCenterIndex) {
-        mMaxLeftScrollDistance = 0;
-        Log.i(TAG, "sain : "+mCenterIndex);
-        int start = 0;
-        for(int i = start ; i < mCenterIndex; i++) {
-            if (i == start) {
-                mMaxLeftScrollDistance = mMaxLeftScrollDistance + modeViews.get(i).getWidth() / 2;
-                continue;
-            }
-            mMaxLeftScrollDistance =  mMaxLeftScrollDistance + mTextPadding + modeViews.get(i).getWidth();
-        }
-
-        if (mCenterIndex != 0) {
-            mMaxLeftScrollDistance = mMaxLeftScrollDistance + modeViews.get(mCenterIndex).getWidth() / 2;
-        }
-        Log.i(TAG, "sain getMaxLeftScrollDistance: "+mMaxLeftScrollDistance);
-        return mMaxLeftScrollDistance;
-    }
-
-    public int getMaxRightScrollDistance(int mCenterIndex) {
-        mMaxRightScrollDistance = 0;
-        int size = mItems.size();
-        int start = mCenterIndex;
-        for(int i = start ; i < size; i++) {
-            if (i == start) {
-                mMaxRightScrollDistance = mMaxRightScrollDistance + modeViews.get(i).getWidth() / 2;
-                continue;
-            }
-            mMaxRightScrollDistance =  mMaxRightScrollDistance + mTextPadding + modeViews.get(i).getWidth();
-        }
-        if (mCenterIndex != size - 1) {
-            mMaxRightScrollDistance = mMaxRightScrollDistance + modeViews.get(mCenterIndex).getWidth() / 2;
-        }
-        return mMaxRightScrollDistance;
-    }
-
     @Override
     public boolean onDown(MotionEvent e) {
         if (!mScroller.isFinished()) {
@@ -142,7 +106,7 @@ public class Switcher extends View implements GestureDetector.OnGestureListener 
         if (dx == 0) {
             return;
         }
-        mScroller.startScroll(0, 0,  dx, 0);
+        mScroller.startScroll(0, 0,  dx, 0, 1500);
         invalidate();
         startPos = startPos - dx;
         updatePosArray(mPositions);

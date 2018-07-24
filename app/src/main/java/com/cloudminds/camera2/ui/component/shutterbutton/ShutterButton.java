@@ -10,6 +10,7 @@ import com.cloudminds.camera2.ui.widget.RotateImageView;
 
 public class ShutterButton extends RotateImageView{
     CommonDrawable commonDrawable;
+
     public ShutterButton(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -27,5 +28,13 @@ public class ShutterButton extends RotateImageView{
         } else {
             setDrawable(new PhotoModeDrawable(this));
         }
+    }
+
+    public void startVideoRecord() {
+      commonDrawable.startVideoRecord();
+    }
+
+    public void stopVideoRecord() {
+        commonDrawable.stopVideoRecord();
     }
 }

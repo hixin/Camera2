@@ -21,12 +21,13 @@ public class VideoModeDrawable extends CommonDrawable {
         return AppUtil.getDrawable(R.drawable.btn_shutter_video_stop_dr);
     }
 
-    private void startVideoRecord() {
+    @Override
+    public void startVideoRecord() {
         setDrawable(getVideoRecordDrawable());
     }
 
-    private void stopVideoRecord() {
+    @Override
+    public void stopVideoRecord() {
         setDrawable(getDefaultDrawable());
     }
-
 }

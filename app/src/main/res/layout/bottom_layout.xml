@@ -67,6 +67,12 @@
             android:background="@drawable/btn_shutter_circle"
             android:scaleType="fitXY"
             android:src="@drawable/shutter_button_normal_dr" />
+
+        <include
+        layout="@layout/control_component"
+        android:layout_width="match_parent"
+        android:layout_height="182dp"
+        android:layout_gravity="bottom" />
     </RelativeLayout>
 
 </RelativeLayout>

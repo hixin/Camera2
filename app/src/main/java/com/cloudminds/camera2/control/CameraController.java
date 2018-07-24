@@ -18,6 +18,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -33,6 +34,7 @@ import android.view.TextureView;
 import android.widget.Toast;
 import com.cloudminds.camera2.App.CameraApp;
 import com.cloudminds.camera2.CameraActivity;
+import com.cloudminds.camera2.model.capture.VideoModule;
 import com.cloudminds.camera2.utils.CameraUtil;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -128,13 +130,18 @@ public class CameraController {
     private int mCameraID = -1;
     private int mWidth = 0, mHeight = 0;
     private boolean mIsCaptureFinished = true;
-    private boolean mIsRecordingVideo = false;
 
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
     private final Camera2Handler mCameraHandler;
     private final HandlerThread mCameraHandlerThread;
     private final Handler mCallbackHandler;
+    private VideoModule.State videoState = VideoModule.State.STOP;
+
+    public VideoModule.State getVideoState() {
+        return videoState;
+    }
+
     public CameraController(CameraActivity activity, Handler handler) {
         mActivity = activity;
         mCallbackHandler = handler;
@@ -153,9 +160,6 @@ public class CameraController {
         return mIsCaptureFinished;
     }
 
-    public boolean isRecordingVideo() {
-        return mIsRecordingVideo;
-    }
 
     private TextureView.SurfaceTextureListener mSurfaceListener = new TextureView.SurfaceTextureListener() {
         @Override
@@ -405,9 +409,6 @@ public class CameraController {
         mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), mWidth, mHeight, largest);
         //获取最佳的录像尺寸
         mVideoSize = getVideoSize(map.getOutputSizes(MediaRecorder.class));
-
-        mMediaRecorder = new MediaRecorder();
-
         startBackgroundThread();
     }
 
@@ -619,6 +620,7 @@ public class CameraController {
     private void setUpMediaRecorder() throws IOException {
         Log.d(TAG, "setUpMediaRecorder!");
         //Video的设置必须遵循严格的顺序
+        mMediaRecorder = new MediaRecorder();
         mMediaRecorder.reset();
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -683,8 +685,6 @@ public class CameraController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     /**
@@ -693,18 +693,40 @@ public class CameraController {
     public void startRecording() {
         prepareRecording();
         mMediaRecorder.start();
-        mIsRecordingVideo = true;
+        videoState = VideoModule.State.RESUME;
+
+    }
+
+    /**
+     * 暂停录像
+     */
+    public void pauseRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mMediaRecorder.pause();
+        }
+        videoState = VideoModule.State.PAUSE;
+    }
+
+
+    public void resumeRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mMediaRecorder.resume();
+        }
+        videoState = VideoModule.State.RESUME;
     }
 
     /**
      * 停止录像
      */
     public void stopRecording() {
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
-        mIsRecordingVideo = false;
+        if (mMediaRecorder != null) {
+            mMediaRecorder.stop();
+            mMediaRecorder.reset();
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+        }
+        videoState = VideoModule.State.STOP;
         startPreview();
-
     }
 
     /**

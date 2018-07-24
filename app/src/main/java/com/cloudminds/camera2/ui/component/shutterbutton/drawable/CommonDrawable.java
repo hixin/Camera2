@@ -28,4 +28,12 @@ public abstract class CommonDrawable {
         mShutterButton.getBackground().setAlpha(255);
         mDrawable.setAlpha(255);
     }
+
+    public void startVideoRecord() {
+
+    }
+
+    public void stopVideoRecord() {
+
+    }
 }
